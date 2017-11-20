@@ -46,14 +46,14 @@ public class Loader {
 
 	private void loadNumPages() {
 		pages = 1;
-		Element last = document.select("ul.pagination li a").last();
+		Element last = document.select("nav.pagination li a").last();
 		if (last != null) {
 			pages = Integer.valueOf(last.text());
 		}
 	}
 
 	public void incPage() {
-		if (page < pages) {
+		if (page <= pages) {
 			page++;
 			reload = true;
 		}
@@ -70,7 +70,7 @@ public class Loader {
 		StringBuilder url = new StringBuilder();
 		url.append(BASE_URL).append(SEARCH).append(subject);
 		if (page > 1) {
-			url.append("/page/").append(page);
+			url.append("/pg/").append(page);
 		}
 		return url.toString();
 	}
@@ -84,7 +84,7 @@ public class Loader {
 
 	public void loadEbooksPage() throws IOException {
 		loadDocument();
-		Elements articles = document.select("article");
+		Elements articles = document.select("div.four.shop.columns");
 		if (!articles.isEmpty()) {
 			for (Element article : articles) {
 				try {
@@ -99,29 +99,33 @@ public class Loader {
 	}
 
 	public void loadAllEbooks() throws IOException {
-		do {
+		while (page <= pages) {
 			System.out.println(String.format("Página: %d de %d", page, pages));
 			loadEbooksPage();
 			incPage();
-		} while (page < pages);
+		}
 	}
 
 	private EbookPost loadEbookPost(Element element) {
 		EbookPost ebookPost = new EbookPost();
 
-		Element titleElement = element.select("h2.entry-title a").first();
+		Element titleElement = element.select("section h5").first();
 		ebookPost.setTitle(titleElement.text());
+
+		titleElement = element.select("a.product-button").first();
+
 		ebookPost.setHref(titleElement.attr("href").trim());
 
-		Elements categoryElements = element.select("ul.list-inline li a");
-		for (Element e : categoryElements) {
-			ebookPost.addCategory(e.text().trim(), e.attr("href").trim());
-		}
+		// Elements categoryElements = element.select("ul.list-inline li a");
+		// for (Element e : categoryElements) {
+		// ebookPost.addCategory(e.text().trim(), e.attr("href").trim());
+		// }
+		//
+		// Element resumeElement = element.select("div.entry-content
+		// p").first();
+		// ebookPost.setResume(resumeElement.text());
 
-		Element resumeElement = element.select("div.entry-content p").first();
-		ebookPost.setResume(resumeElement.text());
-
-		Element imgElement = element.select("div.thumb-wrapper a img").first();
+		Element imgElement = element.select("div.mediaholder a img").first();
 		ebookPost.setImage(imgElement.attr("src").trim());
 
 		loadDetails(ebookPost);
@@ -132,27 +136,30 @@ public class Loader {
 	private void loadDetails(EbookPost ebookPost) {
 		try {
 			Document d = Jsoup.connect(BASE_URL.concat(ebookPost.getHref())).get();
-			Elements elements = d.select("ul.portfolio-meta li");
+			Elements elements = d.select("table.basic-table tr");
 			for (Element e : elements) {
-				String text = e.text().trim();
-				if (text.startsWith(PAGES)) {
-					text = processText(text, PAGES);
-					ebookPost.setPages(Integer.valueOf(text));
-				} else if (text.startsWith(YEAR)) {
-					text = processText(text, YEAR);
-					ebookPost.setYear(Integer.valueOf(text));
-				} else if (text.startsWith(PUBLISHER)) {
-					text = processText(text, PUBLISHER);
-					ebookPost.setPublisher(text);
-				} else if (text.startsWith(LANGUAGE)) {
-					text = processText(text, LANGUAGE);
-					ebookPost.setLanguage(text);
-				} else if (text.startsWith(FILESIZE)) {
-					text = processText(text, FILESIZE);
-					ebookPost.setFileSize(text);
-				} else if (text.startsWith(FILEFORMAT)) {
-					text = processText(text, FILEFORMAT);
-					ebookPost.setFileFormat(text);
+				Elements th = e.select("th");
+				Elements td = e.select("td");
+				String thText = th.text().trim();
+				String tdText = td.text().trim();
+				if (thText.startsWith(PAGES)) {
+					tdText = processText(tdText, PAGES);
+					ebookPost.setPages(Integer.valueOf(tdText));
+				} else if (thText.startsWith(YEAR)) {
+					tdText = processText(tdText, YEAR);
+					ebookPost.setYear(Integer.valueOf(tdText));
+				} else if (thText.startsWith(PUBLISHER)) {
+					tdText = processText(tdText, PUBLISHER);
+					ebookPost.setPublisher(tdText);
+				} else if (thText.startsWith(LANGUAGE)) {
+					tdText = processText(tdText, LANGUAGE);
+					ebookPost.setLanguage(tdText);
+				} else if (thText.startsWith(FILESIZE)) {
+					tdText = processText(tdText, FILESIZE);
+					ebookPost.setFileSize(tdText);
+				} else if (thText.startsWith(FILEFORMAT)) {
+					tdText = processText(tdText, FILEFORMAT);
+					ebookPost.setFileFormat(tdText);
 				}
 			}
 		} catch (IOException e) {
