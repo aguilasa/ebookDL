@@ -88,8 +88,8 @@ public class Loader {
 		if (!articles.isEmpty()) {
 			for (Element article : articles) {
 				try {
-					EbookPost EbookPost = loadEbookPost(article);
-					ebookPosts.add(EbookPost);
+					EbookPost ebookPost = loadEbookPost(article);
+					ebookPosts.add(ebookPost);
 				} catch (RuntimeException e) {
 					e.printStackTrace();
 					continue;
@@ -113,7 +113,6 @@ public class Loader {
 		ebookPost.setTitle(titleElement.text());
 
 		titleElement = element.select("a.product-button").first();
-
 		ebookPost.setHref(titleElement.attr("href").trim());
 
 		// Elements categoryElements = element.select("ul.list-inline li a");
