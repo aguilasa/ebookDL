@@ -9,7 +9,7 @@ public class EbookDl {
 	public static void main(String[] args) {
 		boolean filter = true;
 		try {
-			Loader loader = new Loader("xamarin");
+			Loader loader = new Loader("c%20sharp");
 			loader.loadAllEbooks();
 			Set<EbookPost> ebookPosts = loader.getEbookPosts();
 			if (filter) {
